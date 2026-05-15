@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 venv/
 .poetry/
+.mypy_cache
