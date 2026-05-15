@@ -1,8 +1,9 @@
-from typing import Any, Dict, List
+def filter_by_state(data: list[dict], state: str = "EXECUTED") -> list[dict]:
+    """Фильтрует список словарей по значению ключа 'state'.
 
-
-def filter_by_state(data: List[Dict[str, Any]], state: str = "EXECUTED") -> List[Dict[str, Any]]:
-    """Фильтрует список словарей по значению ключа 'state'."""
+    Возвращает новый список, содержащий только те словари, у которых
+    ключ state соответствует переданному значению (по умолчанию 'EXECUTED').
+    """
     filtered_list = []
     for item in data:
         if item.get("state") == state:
@@ -10,7 +11,10 @@ def filter_by_state(data: List[Dict[str, Any]], state: str = "EXECUTED") -> List
     return filtered_list
 
 
-def sort_by_date(data: List[Dict[str, Any]], sort_order: str = "True") -> List[Dict[str, Any]]:
-    """Сортирует список словарей по ключу 'date'."""
-    is_reverse = sort_order == "True"
-    return sorted(data, key=lambda item: item.get("date", ""), reverse=is_reverse)
+def sort_by_date(data: list[dict], is_descending: bool = True) -> list[dict]:
+    """Сортирует список словарей по ключу 'date'.
+
+    Принимает логический параметр порядка сортировки (по умолчанию True — убывание).
+    Возвращает новый отсортированный список.
+    """
+    return sorted(data, key=lambda item: item.get("date", ""), reverse=is_descending)
