@@ -8,8 +8,8 @@ def filter_by_currency(transactions: List[Dict[str, Any]], currency: str) -> Gen
     Возвращает итератор, который поочередно выдает подходящие транзакции.
     """
     for transaction in transactions:
-        operation_amount = transaction.get("operationAmount", {})
-        currency_info = operation_amount.get("currency", {})
+        operation_amount: Dict[str, Any] = transaction.get("operationAmount", {})
+        currency_info: Dict[str, Any] = operation_amount.get("currency", {})
         currency_code = currency_info.get("code")
 
         if currency_code == currency:
@@ -22,7 +22,9 @@ def transaction_descriptions(transactions: List[Dict[str, Any]]) -> Generator[st
     Использует yield для генерации значений по запросу аналитика.
     """
     for transaction in transactions:
-        yield transaction.get("description", "")
+        description = transaction.get("description", "")
+        # Если description оказалось None или не строкой, приводим к str для mypy
+        yield str(description) if description is not None else ""
 
 
 def card_number_generator(start: int, stop: int) -> Generator[str, None, None]:
