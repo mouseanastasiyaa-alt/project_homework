@@ -1,11 +1,12 @@
 def get_mask_card_number(card_number: str) -> str:
-    """Маскирует номер карты в формате XXXX XX** **** XXXX."""
+    """Маскирует номер банковской карты."""
+    if not card_number:
+        return " ** **** "
     return f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
 
 
 def get_mask_account(account_number: str) -> str:
-    """Маскирует номер счета в формате **XXXX."""
+    """Маскирует номер счета."""
+    if not account_number:
+        return "**"
     return f"**{account_number[-4:]}"
-
-
-    # Функции маскировки.
