@@ -1,0 +1,8 @@
+2026-06-16 17:49:01,430 - utils - INFO - Попытка открыть файл транзакций по пути: dummy_path.json
+2026-06-16 17:49:01,431 - utils - INFO - Файл dummy_path.json успешно прочитан. Найдено транзакций: 1
+2026-06-16 17:49:01,434 - utils - INFO - Попытка открыть файл транзакций по пути: dummy_path.json
+2026-06-16 17:49:01,434 - utils - ERROR - Данные в файле dummy_path.json не являются списком JSON
+2026-06-16 17:49:01,436 - utils - INFO - Попытка открыть файл транзакций по пути: dummy_path.json
+2026-06-16 17:49:01,437 - utils - ERROR - Ошибка декодирования JSON в файле dummy_path.json: Expecting value: line 1 column 1 (char 0)
+2026-06-16 17:49:01,438 - utils - INFO - Попытка открыть файл транзакций по пути: non_existent_file.json
+2026-06-16 17:49:01,438 - utils - ERROR - Файл не найден по указанному пути: non_existent_file.json
