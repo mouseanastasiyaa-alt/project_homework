@@ -1,31 +1,70 @@
-    # Модуль для функций виджета
-from datetime import datetime
-from src.masks import get_mask_card_number, get_mask_account
+"""
+Модуль для работы с виджетами и форматированием данных.
 
-def mask_account_card(info: str) -> str:
-    """Маскирует номер карты или счета с проверкой ввода."""
-    if not info:
-        return "Ошибка: пустая строка"
+Содержит функции для форматирования и отображения финансовой информации.
+"""
 
-    parts = info.split()
-    if len(parts) < 2:
-        return "Ошибка: неверный формат (отсутствует номер или тип)"
+from src.masks import get_mask_account, get_mask_card_number
 
-    number = parts[-1]
-    type_name = " ".join(parts[:-1])
 
-    if "Счет" in type_name:
-        return f"{type_name} {get_mask_account(number)}"
+def mask_account_card(card_or_account: str) -> str:
+    """
+    Маскирует номер карты или счета в зависимости от типа.
+
+    Args:
+        card_or_account (str): Строка с типом и номером карты/счета.
+                              Например: "Visa Platinum 1234567890123456"
+                                       или "Счет 1234567890123456"
+
+    Returns:
+        str: Строка с замаскированным номером.
+
+    Example:
+        >>> mask_account_card("Visa Platinum 1234567890123456")
+        'Visa Platinum 1234 56** **** 3456'
+        >>> mask_account_card("Счет 1234567890123456")
+        'Счет **3456'
+    """
+    # Разделяем на тип и номер
+    parts = card_or_account.rsplit(" ", 1)
+
+    if len(parts) != 2:
+        return card_or_account
+
+    card_type, number = parts[0], parts[1]
+
+    # Проверяем, содержит ли номер только цифры и его длину
+    clean_number = number.replace(" ", "")
+
+    if len(clean_number) == 16 and clean_number.isdigit():
+        # Это карта
+        masked_number = get_mask_card_number(clean_number)
+        return f"{card_type} {masked_number}"
     else:
-        return f"{type_name} {get_mask_card_number(number)}"
+        # Это счет
+        masked_number = get_mask_account(clean_number)
+        return f"{card_type} {masked_number}"
 
-def get_date(date_str: str) -> str:
-    """Превращает строку ISO в ДД.ММ.ГГГГ с помощью datetime."""
-    try:
-        # Преобразуем строку в объект даты
-        date_obj = datetime.fromisoformat(date_str)
-        # Возвращаем в нужном формате
-        return date_obj.strftime("%d.%m.%Y")
-    except ValueError:
-        return "Ошибка: некорректный формат даты"
 
+def get_date(date_string: str) -> str:
+    """
+    Преобразует дату из формата ISO в формат ДД.ММ.ГГГГ.
+
+    Args:
+        date_string (str): Дата в формате "YYYY-MM-DDTHH:MM:SS.MS"
+
+    Returns:
+        str: Дата в формате "ДД.ММ.ГГГГ"
+
+    Example:
+        >>> get_date("2024-01-15T10:30:00.123")
+        '15.01.2024'
+    """
+    if not date_string:
+        return ""
+
+    # Извлекаем только дату (до T)
+    date_part = date_string.split("T")[0]
+    year, month, day = date_part.split("-")
+
+    return f"{day}.{month}.{year}"
