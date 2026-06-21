@@ -6,7 +6,7 @@ from typing import Any, Dict, Generator, List
 
 
 def filter_by_currency(
-    transactions: List[Dict[str, Any]], currency: str
+        transactions: List[Dict[str, Any]], currency: str
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Фильтрует транзакции по валюте.
@@ -39,7 +39,7 @@ def filter_by_currency(
 
 
 def transaction_descriptions(
-    transactions: List[Dict[str, Any]]
+        transactions: List[Dict[str, Any]]
 ) -> Generator[str, None, None]:
     """
     Генерирует описания транзакций.
@@ -84,4 +84,4 @@ def card_number_generator(start: int, end: int) -> Generator[str, None, None]:
     """
     for num in range(start, end + 1):
         card_str = str(num).zfill(16)
-        yield " ".join([card_str[i : i + 4] for i in range(0, 16, 4)])
+        yield " ".join([card_str[i: i + 4] for i in range(0, 16, 4)])
