@@ -1,7 +1,5 @@
 """
 Модуль с генераторами для эффективной обработки транзакций.
-
-Содержит генераторы для фильтрации, трансформации и генерации данных.
 """
 
 from typing import Any, Dict, Generator, List
@@ -26,8 +24,18 @@ def filter_by_currency(
         >>>     print(tx["amount"])
     """
     for transaction in transactions:
-        if transaction.get("currency") == currency:
+        # Проверяем наличие валюты в разных форматах
+        if "currency" in transaction and transaction["currency"] == currency:
             yield transaction
+        elif "operationAmount" in transaction:
+            op_amount = transaction["operationAmount"]
+            if isinstance(op_amount, dict):
+                currency_info = op_amount.get("currency")
+                if isinstance(currency_info, dict):
+                    if currency_info.get("code") == currency:
+                        yield transaction
+                elif currency_info == currency:
+                    yield transaction
 
 
 def transaction_descriptions(
@@ -48,7 +56,12 @@ def transaction_descriptions(
         'Grocery shopping'
     """
     for transaction in transactions:
-        yield transaction.get("description", "")
+        if "description" in transaction:
+            yield transaction["description"]
+        elif "desc" in transaction:
+            yield transaction["desc"]
+        else:
+            yield ""
 
 
 def card_number_generator(start: int, end: int) -> Generator[str, None, None]:
