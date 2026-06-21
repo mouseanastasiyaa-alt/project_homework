@@ -1,31 +1,24 @@
-    # Модуль для функций виджета
-from datetime import datetime
-from src.masks import get_mask_card_number, get_mask_account
+from src.masks import get_mask_account, get_mask_card_number
 
-def mask_account_card(info: str) -> str:
-    """Маскирует номер карты или счета с проверкой ввода."""
-    if not info:
-        return "Ошибка: пустая строка"
 
-    parts = info.split()
-    if len(parts) < 2:
-        return "Ошибка: неверный формат (отсутствует номер или тип)"
+def mask_account_card(input_string: str) -> str:
+    """Определяет тип карты или счета и применяет маскировку."""
+    if not input_string:
+        return ""
 
+    parts = input_string.split()
     number = parts[-1]
     type_name = " ".join(parts[:-1])
 
     if "Счет" in type_name:
         return f"{type_name} {get_mask_account(number)}"
-    else:
-        return f"{type_name} {get_mask_card_number(number)}"
+    return f"{type_name} {get_mask_card_number(number)}"
 
-def get_date(date_str: str) -> str:
-    """Превращает строку ISO в ДД.ММ.ГГГГ с помощью datetime."""
-    try:
-        # Преобразуем строку в объект даты
-        date_obj = datetime.fromisoformat(date_str)
-        # Возвращаем в нужном формате
-        return date_obj.strftime("%d.%m.%Y")
-    except ValueError:
-        return "Ошибка: некорректный формат даты"
 
+def get_date(date_string: str) -> str:
+    """Преобразует строку с датой в формат ДД.ММ.ГГГГ."""
+    if not date_string or len(date_string) < 10:
+        return ""
+    date_part = date_string[:10]
+    year, month, day = date_part.split("-")
+    return f"{day}.{month}.{year}"
