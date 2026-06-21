@@ -72,3 +72,40 @@ def my_function(x, y):
 def another_function():
     pass
 ```
+## Модуль чтения файлов (src/file_reader.py)
+
+Модуль предназначен для чтения финансовых транзакций из файлов форматов CSV и Excel (XLSX).
+
+### Функции:
+
+1. **`read_transactions_from_csv(file_path: str)`** - Чтение транзакций из CSV-файла
+
+2. **`read_transactions_from_excel(file_path: str)`** - Чтение транзакций из Excel-файла
+
+### Параметры:
+- `file_path` (str): Путь к файлу с данными
+
+### Возвращаемое значение:
+- `List[Dict[str, Any]]`: Список словарей, где каждый словарь представляет одну транзакцию
+
+### Исключения:
+- `FileNotFoundError`: Если файл не найден
+- `ValueError`: Если файл пустой или не содержит данных
+- `Exception`: При других ошибках чтения
+
+### Примеры использования:
+
+```python
+from src.file_reader import read_transactions_from_csv, read_transactions_from_excel
+
+# Чтение из CSV-файла
+transactions_csv = read_transactions_from_csv("data/transactions.csv")
+print(f"Загружено {len(transactions_csv)} транзакций из CSV")
+
+# Чтение из Excel-файла
+transactions_excel = read_transactions_from_excel("data/transactions_excel.xlsx")
+print(f"Загружено {len(transactions_excel)} транзакций из Excel")
+
+# Обработка данных
+for transaction in transactions_csv:
+    print(f"ID: {transaction['id']}, Сумма: {transaction['amount']}")
