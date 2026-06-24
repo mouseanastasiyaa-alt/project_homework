@@ -6,12 +6,11 @@ JSON, CSV и XLSX файлов. Позволяет фильтровать, со�
 """
 
 import json
-import os
 from typing import List, Dict, Any
 
 # Импортируем наши модули
 from src.file_reader import read_transactions_from_csv, read_transactions_from_excel
-from src.filters import search_transactions, count_categories
+from src.filters import search_transactions
 from src.processing import filter_by_state, sort_by_date
 
 
@@ -61,13 +60,12 @@ def get_valid_status() -> str:
             print(f"Статус операции \"{status}\" недоступен.")
 
 
-def get_user_choice(prompt: str, options: List[str]) -> bool:
+def get_user_choice(prompt: str) -> bool:
     """
     Запрашивает у пользователя ответ на вопрос с вариантами да/нет.
 
     Args:
         prompt (str): Текст вопроса.
-        options (List[str]): Список допустимых ответов.
 
     Returns:
         bool: True если пользователь ответил "да", False если "нет".
@@ -101,7 +99,7 @@ def get_sort_order() -> str:
 
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     """
-    Выводит список транзакций в красиво отформатированном виде.
+    Выводит список транзакций в формате, соответствующем заданию.
 
     Args:
         transactions (List[Dict[str, Any]]): Список транзакций.
@@ -111,23 +109,64 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
         return
 
     print(f"\nВсего банковских операций в выборке: {len(transactions)}")
-    print("-" * 60)
+    print()
 
-    for i, transaction in enumerate(transactions, 1):
-        # Получаем данные транзакции
-        date = transaction.get("date", "Дата не указана")
+    for transaction in transactions:
+        # Получаем данные
+        date = transaction.get("date", "")
         description = transaction.get("description", "Описание не указано")
+        from_account = transaction.get("from", "")
+        to_account = transaction.get("to", "")
         amount = transaction.get("amount", "0")
-        currency = transaction.get("currency", {}).get("name", "")
-        from_account = transaction.get("from", "Не указан")
-        to_account = transaction.get("to", "Не указан")
 
-        # Форматируем вывод
-        print(f"{i}. {date} {description}")
-        print(f"   От: {from_account}")
-        print(f"   Кому: {to_account}")
-        print(f"   Сумма: {amount} {currency}")
-        print("-" * 60)
+        # Получаем валюту
+        currency = transaction.get("currency", {})
+        if isinstance(currency, dict):
+            currency_name = currency.get("name", "")
+        else:
+            currency_name = str(currency)
+
+        # Если валюты нет, пробуем поле currency_name
+        if not currency_name:
+            currency_name = transaction.get("currency_name", "руб.")
+
+        # Форматируем дату из YYYY-MM-DD в DD.MM.YYYY
+        if date and isinstance(date, str) and "-" in date:
+            try:
+                parts = date.split("-")
+                if len(parts) == 3:
+                    date = f"{parts[2]}.{parts[1]}.{parts[0]}"
+            except:
+                pass
+
+        # Маскируем счета
+        def mask_account(account: str) -> str:
+            """Маскирует номер счета (показывает только последние 4 цифры)."""
+            if not account:
+                return ""
+            if "Счет" in account:
+                parts = account.split()
+                if len(parts) >= 2:
+                    number = parts[-1]
+                    if len(number) >= 4:
+                        return f"Счет **{number[-4:]}"
+            return account
+
+        from_masked = mask_account(from_account)
+        to_masked = mask_account(to_account)
+
+        # Выводим в требуемом формате
+        print(f"{date} {description}")
+
+        if from_masked and to_masked:
+            print(f"{from_masked} -> {to_masked}")
+        elif from_masked:
+            print(from_masked)
+        elif to_masked:
+            print(to_masked)
+
+        print(f"Сумма: {amount} {currency_name}")
+        print()
 
 
 def main() -> None:
@@ -147,14 +186,15 @@ def main() -> None:
 
         if choice == "1":
             print("Для обработки выбран JSON-файл.")
-            file_path = "data/operations.json"  # Путь к вашему JSON файлу
+            file_path = "data/operations.json"  # Путь к JSON файлу
             transactions = get_transactions_from_json(file_path)
             break
         elif choice == "2":
             print("Для обработки выбран CSV-файл.")
-            file_path = "data/transactions.csv"  # Путь к вашему CSV файлу
+            file_path = "data/transactions.csv"  # Путь к CSV файлу
             try:
                 transactions = read_transactions_from_csv(file_path)
+                print(f"Успешно загружено {len(transactions)} транзакций из CSV")
             except Exception as e:
                 print(f"Ошибка при чтении CSV: {e}")
                 transactions = []
@@ -164,6 +204,7 @@ def main() -> None:
             file_path = "data/transactions_excel.xlsx"  # Путь к вашему XLSX файлу
             try:
                 transactions = read_transactions_from_excel(file_path)
+                print(f"Успешно загружено {len(transactions)} транзакций из XLSX")
             except Exception as e:
                 print(f"Ошибка при чтении XLSX: {e}")
                 transactions = []
@@ -184,12 +225,12 @@ def main() -> None:
         return
 
     # Шаг 3: Сортировка по дате
-    if get_user_choice("Отсортировать операции по дате?", ["да", "нет"]):
+    if get_user_choice("Отсортировать операции по дате?"):
         order = get_sort_order()
-        transactions = sort_by_date(transactions, descending=(order == "desc"))
+        transactions = sort_by_date(transactions, reverse=(order == "desc"))
 
     # Шаг 4: Фильтрация по валюте
-    if get_user_choice("Выводить только рублевые транзакции?", ["да", "нет"]):
+    if get_user_choice("Выводить только рублевые транзакции?"):
         transactions = [t for t in transactions if t.get("currency", {}).get("name") == "руб."]
 
     if not transactions:
@@ -197,7 +238,7 @@ def main() -> None:
         return
 
     # Шаг 5: Поиск по описанию
-    if get_user_choice("Отфильтровать список транзакций по определенному слову в описании?", ["да", "нет"]):
+    if get_user_choice("Отфильтровать список транзакций по определенному слову в описании?"):
         search_word = input("Введите слово для поиска: ").strip()
         transactions = search_transactions(transactions, search_word)
 
