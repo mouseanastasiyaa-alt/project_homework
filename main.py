@@ -4,7 +4,7 @@
 """
 
 import json
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from src.file_reader import read_transactions_from_csv, read_transactions_from_excel
 from src.filters import search_transactions
@@ -18,7 +18,8 @@ def get_transactions_from_json(file_path: str) -> List[Dict[str, Any]]:
             data = json.load(f)
             return data if isinstance(data, list) else []
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Ошибка: {e}" if isinstance(e, FileNotFoundError) else "Ошибка: Неверный формат JSON")
+        print(f"Ошибка: {e}" if isinstance(e, FileNotFoundError)
+              else "Ошибка: Неверный формат JSON")
         return []
 
 
@@ -26,7 +27,10 @@ def get_valid_status() -> str:
     """Запрашивает у пользователя статус операции."""
     valid = ["EXECUTED", "CANCELED", "PENDING"]
     while True:
-        status = input("\nВведите статус, по которому необходимо выполнить фильтрацию.\nДоступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n").strip().upper()
+        status = input(
+            "\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
+            "Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n"
+        ).strip().upper()
         if status in valid:
             print(f"Операции отфильтрованы по статусу \"{status}\"")
             return status
@@ -79,7 +83,7 @@ def format_date(date: str) -> str:
         date_str = date.split("T")[0] if "T" in date else date
         parts = date_str.split("-")
         return f"{parts[2]}.{parts[1]}.{parts[0]}" if len(parts) == 3 else date
-    except:
+    except (ValueError, AttributeError, IndexError):
         return date
 
 
@@ -111,16 +115,13 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
 
 def main() -> None:
     """Главная функция программы."""
-    # Приветствие в точном соответствии с заданием
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
 
-    # Меню в точном соответствии с заданием
     print("\nВыберите необходимый пункт меню:")
     print("1. Получить информацию о транзакциях из JSON-файла")
     print("2. Получить информацию о транзакциях из CSV-файла")
     print("3. Получить информацию о транзакциях из XLSX-файла")
 
-    # Выбор пользователя
     while True:
         choice = input("\nВаш выбор (1, 2 или 3): ").strip()
 
@@ -156,7 +157,6 @@ def main() -> None:
         print("Не удалось загрузить транзакции. Программа завершает работу.")
         return
 
-    # Фильтрация по статусу
     status = get_valid_status()
     transactions = filter_by_state(transactions, status)
 
@@ -164,25 +164,22 @@ def main() -> None:
         print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
         return
 
-    # Сортировка по дате
     if get_user_choice("Отсортировать операции по дате?"):
         order = get_sort_order()
         transactions = sort_by_date(transactions, reverse=(order == "desc"))
 
-    # Фильтрация по валюте
     if get_user_choice("Выводить только рублевые транзакции?"):
-        transactions = [t for t in transactions if t.get("currency", {}).get("name") == "руб."]
+        transactions = [t for t in transactions
+                        if t.get("currency", {}).get("name") == "руб."]
 
     if not transactions:
         print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
         return
 
-    # Поиск по описанию
     if get_user_choice("Отфильтровать список транзакций по определенному слову в описании?"):
         search_word = input("Введите слово для поиска: ").strip()
         transactions = search_transactions(transactions, search_word)
 
-    # Вывод результатов
     print("\nРаспечатываю итоговый список транзакций...")
     print_transactions(transactions)
 
