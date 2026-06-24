@@ -59,20 +59,38 @@ def get_sort_order() -> str:
         print("Пожалуйста, введите 'по возрастанию' или 'по убыванию'")
 
 
-def mask_account(account: str) -> str:
+def mask_account(account: Any) -> str:
     """Маскирует номер счета или карты."""
+
+    if account is None:
+        return ""
+
+    if not isinstance(account, str):
+        return ""
+
+    account = account.strip()
+
     if not account:
         return ""
+
     parts = account.split()
+
     if len(parts) < 2:
         return account
+
     if "Счет" in account:
         return f"Счет **{parts[-1][-4:]}" if len(parts[-1]) >= 4 else account
+
     card_type = " ".join(parts[:-1])
     number = parts[-1]
+
     if len(number) >= 16:
         return f"{card_type} {number[:4]} {number[4:6]}** **** {number[-4:]}"
-    return f"{card_type} **{number[-4:]}" if len(number) >= 4 else account
+
+    if len(number) >= 4:
+        return f"{card_type} **{number[-4:]}"
+
+    return account
 
 
 def format_date(date: str) -> str:

@@ -25,6 +25,9 @@ def mask_account_card(card_or_account: str) -> str:
         >>> mask_account_card("Счет 1234567890123456")
         'Счет **3456'
     """
+    if not card_or_account:
+        return ""
+
     # Разделяем на тип и номер
     parts = card_or_account.rsplit(" ", 1)
 
@@ -33,17 +36,22 @@ def mask_account_card(card_or_account: str) -> str:
 
     card_type, number = parts[0], parts[1]
 
-    # Проверяем, содержит ли номер только цифры и его длину
+    # Очищаем номер от пробелов
     clean_number = number.replace(" ", "")
 
-    if len(clean_number) == 16 and clean_number.isdigit():
-        # Это карта
-        masked_number = get_mask_card_number(clean_number)
-        return f"{card_type} {masked_number}"
-    else:
-        # Это счет
+    # Проверяем, что это номер счета (начинается со слова "Счет")
+    if "Счет" in card_type:
         masked_number = get_mask_account(clean_number)
         return f"{card_type} {masked_number}"
+
+    # Если это карта (длина 16 цифр)
+    elif len(clean_number) == 16 and clean_number.isdigit():
+        masked_number = get_mask_card_number(clean_number)
+        return f"{card_type} {masked_number}"
+
+    # Если не удалось определить тип, возвращаем как есть
+    else:
+        return card_or_account
 
 
 def get_date(date_string: str) -> str:
