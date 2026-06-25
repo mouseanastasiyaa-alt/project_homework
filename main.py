@@ -61,35 +61,24 @@ def get_sort_order() -> str:
 
 def mask_account(account: Any) -> str:
     """Маскирует номер счета или карты."""
-
     if account is None:
         return ""
-
     if not isinstance(account, str):
         return ""
-
     account = account.strip()
-
     if not account:
         return ""
-
     parts = account.split()
-
     if len(parts) < 2:
         return account
-
     if "Счет" in account:
         return f"Счет **{parts[-1][-4:]}" if len(parts[-1]) >= 4 else account
-
     card_type = " ".join(parts[:-1])
     number = parts[-1]
-
     if len(number) >= 16:
         return f"{card_type} {number[:4]} {number[4:6]}** **** {number[-4:]}"
-
     if len(number) >= 4:
         return f"{card_type} **{number[-4:]}"
-
     return account
 
 
@@ -105,6 +94,24 @@ def format_date(date: str) -> str:
         return date
 
 
+def get_currency_name(transaction: Dict[str, Any]) -> str:
+    """Извлекает название валюты из транзакции."""
+    currency = transaction.get("currency", {})
+    if isinstance(currency, dict):
+        currency_name = currency.get("name", "")
+    else:
+        currency_name = str(currency) if currency else ""
+
+    if not currency_name:
+        currency_name = transaction.get("currency_name", "")
+    if not currency_name:
+        currency_name = transaction.get("currency_code", "")
+    if not currency_name:
+        currency_name = "руб."
+
+    return currency_name
+
+
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     """Выводит список транзакций в формате задания."""
     if not transactions:
@@ -114,21 +121,38 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     print(f"\nВсего банковских операций в выборке: {len(transactions)}\n")
 
     for t in transactions:
-        currency = t.get("currency", {})
-        currency_name = currency.get("name", "") if isinstance(currency, dict) else str(currency)
-        currency_name = currency_name or t.get("currency_name", "руб.")
+        # Получаем дату
+        date = t.get("date", "")
 
+        # Получаем описание
+        description = t.get("description", "")
+        if not description:
+            description = "Описание не указано"
+
+        # Получаем валюту
+        currency_name = get_currency_name(t)
+
+        # Маскируем счета
         from_masked = mask_account(t.get("from", ""))
         to_masked = mask_account(t.get("to", ""))
 
-        print(f"{format_date(t.get('date', ''))} {t.get('description', 'Описание не указано')}")
+        # Форматируем дату
+        formatted_date = format_date(date)
+
+        # Получаем сумму
+        amount = t.get("amount")
+        if amount is None:
+            amount = "0"
+
+        # Выводим в требуемом формате
+        print(f"{formatted_date} {description}")
         if from_masked and to_masked:
             print(f"{from_masked} -> {to_masked}")
         elif from_masked:
             print(from_masked)
         elif to_masked:
             print(to_masked)
-        print(f"Сумма: {t.get('amount', '0')} {currency_name}\n")
+        print(f"Сумма: {amount} {currency_name}\n")
 
 
 def main() -> None:
@@ -175,6 +199,11 @@ def main() -> None:
         print("Не удалось загрузить транзакции. Программа завершает работу.")
         return
 
+    # Если нет поля state - добавляем его без сообщения
+    if transactions and "state" not in transactions[0]:
+        for t in transactions:
+            t["state"] = "EXECUTED"
+
     status = get_valid_status()
     transactions = filter_by_state(transactions, status)
 
@@ -187,8 +216,12 @@ def main() -> None:
         transactions = sort_by_date(transactions, reverse=(order == "desc"))
 
     if get_user_choice("Выводить только рублевые транзакции?"):
-        transactions = [t for t in transactions
-                        if t.get("currency", {}).get("name") == "руб."]
+        filtered = []
+        for t in transactions:
+            currency_name = get_currency_name(t)
+            if currency_name.lower() in ["руб.", "руб", "rur", "rub"]:
+                filtered.append(t)
+        transactions = filtered
 
     if not transactions:
         print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
