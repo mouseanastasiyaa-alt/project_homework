@@ -41,7 +41,7 @@ def read_transactions_from_csv(file_path: str) -> List[Dict[str, Any]]:
             logger.error(f"Файл не найден: {file_path}")
             raise FileNotFoundError(f"Файл не найден: {file_path}")
 
-        df = pd.read_csv(file_path, sep=";")
+        df = pd.read_csv(file_path)
 
         if df.empty:
             logger.error("CSV файл пуст")
