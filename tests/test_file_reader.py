@@ -32,7 +32,6 @@ class TestReadTransactionsFromCSV:
         result = read_transactions_from_csv("test.csv")
         assert result == MOCK_TRANSACTIONS
         mock_read_csv.assert_called_once_with("test.csv")
-
     @patch("src.file_reader.os.path.exists")
     @patch("src.file_reader.pd.read_csv")
     def test_empty_csv(self, mock_read_csv, mock_exists):
